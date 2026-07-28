@@ -1,10 +1,10 @@
-const STORAGE_KEY = 'sql-vault-scripts';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const TYPES = [
   { id: 'Schema', color: '#4FBDBA' },
   { id: 'Query', color: '#E8A33D' },
   { id: 'Impact', color: '#B48EF0' },
-  { id: 'Scripts', color: '#6FCF97' },
+  { id: 'Script', color: '#6FCF97' },
   { id: 'Other', color: '#8B96A5' },
 ];
 
@@ -15,29 +15,86 @@ let typeFilter = null;
 const openIds = new Set();
 let editingId = null; // null = not editing, 'new' = creating
 
-// ---------- Persistence ----------
+// ---------- Persistence (Supabase) ----------
 
-function loadScripts() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    scripts = raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    console.error('Failed to load scripts:', e);
+async function loadScripts() {
+  const { data, error } = await sb
+    .from('scripts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Failed to load scripts:', error);
+    alert('Could not load your scripts from Supabase. Check your URL/key in supabase-config.js and your internet connection.');
     scripts = [];
+    return;
   }
+  scripts = data.map(row => ({
+    id: row.id,
+    title: row.title,
+    project: row.project,
+    type: row.type,
+    tags: row.tags || [],
+    content: row.content,
+    createdAt: new Date(row.created_at).getTime(),
+  }));
 }
 
-function saveScripts() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(scripts));
-  } catch (e) {
-    console.error('Failed to save scripts:', e);
-    alert('Could not save your changes. Your browser storage may be full or disabled.');
+async function insertScript(script) {
+  const { data, error } = await sb
+    .from('scripts')
+    .insert([{
+      title: script.title,
+      project: script.project,
+      type: script.type,
+      tags: script.tags,
+      content: script.content,
+    }])
+    .select();
+
+  if (error) {
+    console.error('Failed to save script:', error);
+    alert('Could not save this script to Supabase.');
+    return null;
   }
+  const row = data[0];
+  return {
+    id: row.id,
+    title: row.title,
+    project: row.project,
+    type: row.type,
+    tags: row.tags || [],
+    content: row.content,
+    createdAt: new Date(row.created_at).getTime(),
+  };
 }
 
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+async function updateScriptRow(id, fields) {
+  const { error } = await sb
+    .from('scripts')
+    .update(fields)
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to update script:', error);
+    alert('Could not save your changes to Supabase.');
+    return false;
+  }
+  return true;
+}
+
+async function deleteScriptRow(id) {
+  const { error } = await sb
+    .from('scripts')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to delete script:', error);
+    alert('Could not delete this script from Supabase.');
+    return false;
+  }
+  return true;
 }
 
 function typeColor(t) {
@@ -188,12 +245,14 @@ function renderScriptList() {
       renderScriptList();
     });
 
-    card.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
+    card.querySelector('[data-action="delete"]').addEventListener('click', async (e) => {
       e.stopPropagation();
       if (confirm('Delete this script? This cannot be undone.')) {
-        scripts = scripts.filter(x => x.id !== s.id);
-        saveScripts();
-        render();
+        const ok = await deleteScriptRow(s.id);
+        if (ok) {
+          scripts = scripts.filter(x => x.id !== s.id);
+          render();
+        }
       }
     });
 
@@ -242,7 +301,7 @@ function closeModal() {
   editingId = null;
 }
 
-function saveFromModal() {
+async function saveFromModal() {
   const title = document.getElementById('fieldTitle').value.trim();
   const project = document.getElementById('fieldProject').value.trim() || 'General';
   const type = document.getElementById('fieldType').value;
@@ -254,19 +313,24 @@ function saveFromModal() {
     return;
   }
 
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
   if (editingId) {
-    scripts = scripts.map(s => s.id === editingId
-      ? { ...s, title, project, type, tags, content }
-      : s);
+    const ok = await updateScriptRow(editingId, { title, project, type, tags, content });
+    if (ok) {
+      scripts = scripts.map(s => s.id === editingId
+        ? { ...s, title, project, type, tags, content }
+        : s);
+    }
   } else {
-    scripts.push({
-      id: uid(),
-      title, project, type, tags, content,
-      createdAt: Date.now(),
-    });
+    const newScript = await insertScript({ title, project, type, tags, content });
+    if (newScript) scripts.push(newScript);
   }
 
-  saveScripts();
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Save script';
   closeModal();
   render();
 }
@@ -289,5 +353,10 @@ document.getElementById('modalBackdrop').addEventListener('click', (e) => {
 
 // ---------- Init ----------
 
-loadScripts();
-render();
+async function init() {
+  document.getElementById('scriptCountLabel').textContent = 'Loading…';
+  await loadScripts();
+  render();
+}
+
+init();
