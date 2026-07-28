@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="vault">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="brand"><span class="dot">&rsaquo;</span> SQL Vault</div>
+      <div class="brand-sub" id="scriptCountLabel">0 scripts stored</div>
+    </div>
+
+    <div>
+      <div class="side-section-label">Projects</div>
+      <div class="filter-list" id="projectFilterList"></div>
+    </div>
+
+    <div>
+      <div class="side-section-label">Type</div>
+      <div class="filter-list" id="typeFilterList"></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="search title, tags, or SQL body…">
+      </div>
+      <button class="btn btn-primary" id="newScriptBtn">+ New script</button>
+    </div>
+
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <div class="glyph" id="emptyGlyph">{ }</div>
+      <div class="msg" id="emptyMsg">No scripts yet. Add your first one.</div>
+      <button class="btn btn-primary" id="emptyNewBtn">+ New script</button>
+    </div>
+
+    <div class="script-list" id="scriptList"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">New script</div>
+
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="fieldTitle" placeholder="e.g. Create users table">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Project / DB</label>
+        <input type="text" id="fieldProject" list="projectOptions" placeholder="e.g. inventory-app">
+        <datalist id="projectOptions"></datalist>
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <select id="fieldType">
+          <option>Schema</option>
+          <option>Query</option>
+          <option>Impact</option>
+          <option>Scripts</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tags (comma separated)</label>
+      <input type="text" id="fieldTags" placeholder="e.g. postgres, indexes, users">
+    </div>
+
+    <div class="field">
+      <label>SQL content</label>
+      <textarea id="fieldContent" placeholder="CREATE TABLE users ( ... );"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn">Save script</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
