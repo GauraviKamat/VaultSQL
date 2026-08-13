@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VaultSQL</title>
+<title>SQL Vault</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<div class="vault">
+<div class="vault" id="vaultApp">
 
   <!-- Sidebar -->
   <div class="sidebar">
@@ -19,6 +19,10 @@
       <div class="brand"><span class="dot">&rsaquo;</span> SQL Vault</div>
       <div class="brand-sub" id="scriptCountLabel">0 scripts stored</div>
     </div>
+
+    <div class="auth-widget" id="authWidget"></div>
+
+    <button class="btn btn-ghost" id="leaderboardBtn">🏆 Leaderboard</button>
 
     <div>
       <div class="side-section-label">Projects</div>
@@ -54,7 +58,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Script Modal -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <div class="modal-title" id="modalTitle">New script</div>
@@ -92,9 +96,62 @@
       <textarea id="fieldContent" placeholder="CREATE TABLE users ( ... );"></textarea>
     </div>
 
+    <div class="field">
+      <label>Detected complexity</label>
+      <div id="complexityDisplay" class="complexity-display">Small — 5 pts</div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
       <button class="btn btn-primary" id="saveBtn">Save script</button>
+    </div>
+  </div>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-backdrop" id="authModalBackdrop">
+  <div class="modal">
+    <div class="auth-tabs" id="authTabsRow">
+      <button class="auth-tab active" id="tabSignIn">Sign in</button>
+      <button class="auth-tab" id="tabSignUp">Create account</button>
+    </div>
+
+    <div class="modal-title" id="authTitleForReset" style="display:none;">Reset your password</div>
+
+    <div class="field" id="emailField">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com">
+    </div>
+    <div class="field" id="usernameField" style="display:none;">
+      <label>Display name</label>
+      <input type="text" id="authUsername" placeholder="How your name shows on scripts">
+    </div>
+    <div class="field" id="passwordField">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••">
+    </div>
+
+    <div class="login-error" id="authError"></div>
+    <div class="login-error" id="authSuccess" style="color: var(--green);"></div>
+
+    <div class="forgot-link-row" id="forgotLinkRow">
+      <a href="reset.html" id="forgotPasswordLink">Forgot password?</a>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="authCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="authSubmitBtn">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<!-- Leaderboard Modal -->
+<div class="modal-backdrop" id="leaderboardModalBackdrop">
+  <div class="modal modal-wide">
+    <div class="modal-title">🏆 Leaderboard</div>
+    <div id="leaderboardList" class="leaderboard-list"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="leaderboardCloseBtn">Close</button>
     </div>
   </div>
 </div>
