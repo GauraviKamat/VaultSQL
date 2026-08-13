@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset password — SQL Vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="reset-page">
+  <div class="reset-card">
+    <div class="brand"><span class="dot">&rsaquo;</span> SQL Vault</div>
+
+    <div id="resetFormView">
+      <div class="modal-title">Reset your password</div>
+      <div class="reset-sub">Enter your account email and a new password.</div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="resetEmail" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label>New password</label>
+        <input type="password" id="newPassword" placeholder="••••••••">
+      </div>
+      <div class="field">
+        <label>Confirm new password</label>
+        <input type="password" id="confirmPassword" placeholder="••••••••">
+      </div>
+
+      <div class="login-error" id="resetError"></div>
+
+      <div class="modal-actions">
+        <a class="btn btn-ghost" href="index.html" style="text-decoration:none; display:inline-block;">Cancel</a>
+        <button class="btn btn-primary" id="resetSubmitBtn">Set new password</button>
+      </div>
+    </div>
+
+    <div id="resetSuccessView" style="display:none;">
+      <div class="modal-title">Password updated</div>
+      <div class="reset-sub">You can now sign in with your new password.</div>
+      <div class="modal-actions">
+        <a class="btn btn-primary" href="index.html" style="text-decoration:none; display:inline-block;">Go to sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="supabase.js"></script>
+<script>
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  document.getElementById('resetSubmitBtn').addEventListener('click', async () => {
+    const email = document.getElementById('resetEmail').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const errorEl = document.getElementById('resetError');
+    errorEl.textContent = '';
+
+    if (!email) {
+      errorEl.textContent = 'Please enter your email.';
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      errorEl.textContent = 'Password must be at least 6 characters.';
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      errorEl.textContent = 'Passwords do not match.';
+      return;
+    }
+
+    const btn = document.getElementById('resetSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const { error } = await sb.rpc('custom_reset_password_no_auth', {
+      p_email: email,
+      p_new_password: newPassword,
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Set new password';
+
+    if (error) {
+      errorEl.textContent = error.message;
+      return;
+    }
+
+    document.getElementById('resetFormView').style.display = 'none';
+    document.getElementById('resetSuccessView').style.display = 'block';
+  });
+</script>
+</body>
+</html>
